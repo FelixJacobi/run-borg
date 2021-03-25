@@ -1,6 +1,8 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
+set -e
 . /etc/borg/config
+set +e
 
 # Skriptvorlage BorgBackup
 # https://wiki.ubuntuusers.de/BorgBackup/
