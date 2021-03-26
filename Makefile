@@ -5,8 +5,8 @@ endif
 install:
 	install -d $(DESTDIR)$(PREFIX)/bin/
 	install -d $(DESTDIR)$(PREFIX)/sbin/
-	install -m 755 pts-wall $(DESTDIR)$(PREFIX)/bin/
-	install -m 755 run-borg $(DESTDIR)$(PREFIX)/sbin/
+	install -m 755 pts-wall $(DESTDIR)$(PREFIX)/bin/pts-wall
+	install -m 755 run-borg $(DESTDIR)$(PREFIX)/sbin/run-borg
 
 uninstall:
 	rm -f $(DESTDIR)$(PREFIX)/bin/pts-wall
