@@ -27,26 +27,26 @@ mount_name()
 echo "Borg is now assimilating files!" | pts-wall
 sleep 5
 
-for mountpoint in ${mountpoints[@]}
+for mountpoint in "${mountpoints[@]}"
 do
   # backup data
   SECONDS=0
 
   echo "Starting backup $(date) of $mountpoint."
 
-  name=$(mount_name "$mountpoint")
+  name="$(mount_name "$mountpoint")"
   borg create --compression $compression --exclude-caches --one-file-system -v --stats --progress \
-      --exclude-from /etc/borg/exclude $fullpath::"{hostname}-{now:%Y-%m-%d-%H%M%S}-$name" $mountpoint ||
+      --exclude-from /etc/borg/exclude "$fullpath::{hostname}-$name-{now:%Y-%m-%d-%H%M%S}" $mountpoint ||
       { echo "Error during backup $(date) of $mountpoint. Duration: $SECONDS seconds"; echo "Emergency: Borg failed!" | pts-wall; continue; }
 
    echo "End of backup $(date) of $mountpoint. Duration: $SECONDS seconds"
 done
 
 # prune archives
-for mountpoint in ${mountpoints[@]}
+for mountpoint in "${mountpoints[@]}"
 do
-  name=$(mount_name "$mountpoint")
-  borg prune -v --list $fullpath -a 're:^{hostname}-[0-9]+-[0-9]+-[0-9]+-[0-9]+-'"$name$" $pruning || { echo "Failed to prune!"; echo "Emergency: Borg failed!" | pts-wall; }
+  name="$(mount_name "$mountpoint")"
+  borg prune -v --list "$fullpath" -P '{hostname}-'"$name-" $pruning || { echo "Failed to prune!"; echo "Emergency: Borg failed!" | pts-wall; }
 done
 
 echo "Borg has finished assimilating files!" | pts-wall
