@@ -35,8 +35,8 @@ do
   echo "Starting backup $(date) of $mountpoint."
 
   name="$(mount_name "$mountpoint")"
-  borg create --compression $compression --exclude-caches --one-file-system -v --stats --progress \
-      --exclude-from /etc/borg/exclude "$fullpath::{hostname}-$name-{now:%Y-%m-%d-%H%M%S}" $mountpoint ||
+  borg create --compression "$compression" --exclude-caches --one-file-system -v --stats --progress \
+      --exclude-from /etc/borg/exclude "$fullpath::{hostname}-$name-{now:%Y-%m-%d-%H%M%S}" "$mountpoint" ||
       { echo "Error during backup $(date) of $mountpoint. Duration: $SECONDS seconds"; echo "Emergency: Borg failed!" | pts-wall; continue; }
 
    echo "End of backup $(date) of $mountpoint. Duration: $SECONDS seconds"
