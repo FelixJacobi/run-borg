@@ -34,21 +34,42 @@ do
   # backup data
   SECONDS=0
 
-  echo "Starting backup $(date) of $mountpoint."
+  # Silent cronjob
+  #echo "Starting backup $(date) of $mountpoint."
 
   name="$(mount_name "$mountpoint")"
-  borg create --compression "$compression" --exclude-caches --one-file-system -v --stats --progress \
-      --exclude-from /etc/borg/exclude "$fullpath::{hostname}-$name-{now:%Y-%m-%d-%H%M%S}" "$mountpoint" ||
-      { echo "Error during backup $(date) of $mountpoint. Duration: $SECONDS seconds"; echo "Emergency: Borg failed!" | pts-wall; continue; }
+  set +e
+  LOG="$(borg create --compression "$compression" --exclude-caches --one-file-system -v --stats --progress \
+      --exclude-from /etc/borg/exclude "$fullpath::{hostname}-$name-{now:%Y-%m-%d-%H%M%S}" "$mountpoint" 2>&1)"
+  EXIT_CODE="$?"
+  set -e
 
-   echo "End of backup $(date) of $mountpoint. Duration: $SECONDS seconds"
+  if ! [ "$EXIT_CODE" = "0" ]
+  then
+    echo "Error during backup $(date) of $mountpoint. Duration: $SECONDS seconds"
+    echo "$LOG" >&2
+    echo "Emergency: Borg failed!" | pts-wall
+    continue
+  fi
+  # Silent cronjob
+  #echo "End of backup $(date) of $mountpoint. Duration: $SECONDS seconds"
 done
 
 # prune archives
 for mountpoint in "${mountpoints[@]}"
 do
   name="$(mount_name "$mountpoint")"
-  borg prune -v --list "$fullpath" -P '{hostname}-'"$name-" $pruning || { echo "Failed to prune!"; echo "Emergency: Borg failed!" | pts-wall; }
+  set +e
+  LOG="$(borg prune -v --list "$fullpath" -P '{hostname}-'"$name-" $pruning 2>&1)"
+  EXIT_CODE="$?"
+  set -e
+
+  if ! [ "$EXIT_CODE" = "0" ]
+  then
+    echo "Failed to prune." >&2
+    echo "$LOG" >&2
+    echo "Emergency: Borg failed!" | pts-wall
+  fi
 done
 
 run-parts --report /etc/borg/post.d
